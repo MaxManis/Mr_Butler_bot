@@ -17,23 +17,23 @@ def get_weather(location='Киев'):
     temper = data['main']['temp']
     temp_min = data['main']['temp_min']
     temp_max = data['main']['temp_max']
-    if conditions=='clear sky':
-        conditions='чистое небо'
-    elif conditions=='few clouds':
+    if conditions == 'clear sky':
+        conditions = 'чистое небо'
+    elif conditions == 'few clouds':
         conditions = 'несколько облаков'
-    elif conditions=='scattered clouds':
+    elif conditions == 'scattered clouds':
         conditions = 'рассеянные облака'
-    elif conditions=='broken clouds':
+    elif conditions == 'broken clouds':
         conditions = 'разбитые облака'
-    elif conditions=='shower rain':
+    elif conditions == 'shower rain':
         conditions = 'ливень'
-    elif conditions=='rain':
+    elif conditions == 'rain':
         conditions = 'дождь'
-    elif conditions=='thunderstorm':
+    elif conditions == 'thunderstorm':
         conditions = 'гроза'
-    elif conditions=='snow':
+    elif conditions == 'snow':
         conditions = 'снег'
-    elif conditions=='light snow':
+    elif conditions == 'light snow':
         conditions = 'легкий снег'
 
     info = f'<b>В городе {city} сейчас {conditions}.</b>\n' \

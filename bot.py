@@ -15,6 +15,8 @@ import chatbot_talk
 import exchange_rate
 import sqlite_db
 import text_recognition
+import blackjack
+import interesting_api
 
 import random
 
@@ -74,6 +76,16 @@ async def contact(message: types.Message):
         await start_command(message)
 
 
+@dp.message_handler(Text(equals="😁Daddy jokes"))
+async def get_weather(message: types.Message):
+    await bot.send_message(message.from_user.id, interesting_api.daddy_jokes())
+
+
+@dp.message_handler(Text(equals="👽Rick and Morty"))
+async def get_rick_morty(message: types.Message):
+    await bot.send_message(message.from_user.id, interesting_api.get_morty(), parse_mode=types.ParseMode.HTML)
+
+
 @dp.message_handler(Text(equals="✒️Распознавание текста"))
 async def get_weather(message: types.Message):
     await bot.send_message(message.from_user.id, 'Выберете, пожалуйста, изображение на вашем устройстве.\n'
@@ -92,8 +104,45 @@ async def handle_docs_photo(message):
     co = ''
     for i in res:
         co += f'\n{i}'
-    await bot.send_message(message.from_user.id, 'Результат распознавания текста:')
+    await bot.send_message(message.from_user.id, '✒️Результат распознавания текста:')
     await bot.send_message(message.from_user.id, co, reply_markup=keyboard)
+
+
+@dp.message_handler(Text(equals="🃏BlackJack"))
+async def start_blackjack(message: types.Message):
+    await bot.send_message(message.from_user.id, 'WELCOME TO BLACKJACK!')
+    global dealer_hand, player_hand
+    dealer_hand = blackjack.deal()
+    player_hand = blackjack.deal()
+    await bot.send_message(message.from_user.id, "The dealer is showing a " +
+                           hlink(str(dealer_hand[0]['value']), dealer_hand[0]['link']), parse_mode=types.ParseMode.HTML)
+    await bot.send_message(message.from_user.id, "You have a " + hlink(str(player_hand[0]['value']), player_hand[0]['link']) +
+                           ' and ' + hlink(str(player_hand[1]['value']), player_hand[1]['link']) + " for a total of " +
+                           str(blackjack.total(player_hand)), parse_mode=types.ParseMode.HTML)
+    blackjack.blackjack(dealer_hand, player_hand)
+    start_buttons = ["♥️Hit", "♠️Stand", "❌Quit"]
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(*start_buttons)
+    await bot.send_message(message.from_user.id, 'Do you want to Hit, Stand, or Quit: ', reply_markup=keyboard)
+
+
+@dp.message_handler(Text(equals=["♥️Hit", "♠️Stand", "❌Quit"]))
+async def play_blackjack(message: types.Message):
+    start_buttons = config.start_keys
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(*start_buttons)
+    if message.text == "♥️Hit":
+        blackjack.hit(player_hand)
+        while blackjack.total(dealer_hand) < 17:
+            blackjack.hit(dealer_hand)
+        await bot.send_message(message.from_user.id, blackjack.score(dealer_hand, player_hand), reply_markup=keyboard)
+    elif message.text == "♠️Stand":
+        while blackjack.total(dealer_hand) < 17:
+            blackjack.hit(dealer_hand)
+        await bot.send_message(message.from_user.id, blackjack.score(dealer_hand, player_hand), reply_markup=keyboard)
+    elif message.text == "❌Quit":
+        info = 'Bye!'
+        await bot.send_message(message.from_user.id, info, reply_markup=keyboard)
 
 
 @dp.message_handler(Text(equals="⛅️Погода"))
