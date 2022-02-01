@@ -1,5 +1,5 @@
 import requests
-import config
+import config_files.config as config
 
 
 def gey_rate(code):

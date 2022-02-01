@@ -1,10 +1,11 @@
 import sqlite3
+import config_files.config as config
 
 
 def sql_check(user_id):
     # SQL lite DATABASE:
     # create db & table and connect
-    connect = sqlite3.connect("db/users.db")
+    connect = sqlite3.connect(config.db_path + "users.db")
     cursor = connect.cursor()
     cursor.execute("""CREATE TABLE IF NOT EXISTS users(
             id INTEGER PRIMARY KEY,
@@ -31,7 +32,7 @@ def sql_check(user_id):
 
 def add_user(message):
     print(message)
-    connect = sqlite3.connect("db/users.db")
+    connect = sqlite3.connect(config.db_path + "users.db")
     cursor = connect.cursor()
     cursor.execute("INSERT INTO users VALUES(?, ?, ?, ?)", (message.contact.user_id, message.contact.phone_number,
                                                             message.contact.first_name, message.contact.last_name))

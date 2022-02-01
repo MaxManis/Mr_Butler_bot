@@ -1,9 +1,9 @@
 import requests
-import config
+import config_files.config as config
 
 
-def get_weather(location='Киев'):
-    city = location
+def get_weather(city_en, city_ru):
+    city = city_en
     app_id = config.ow_appid
 
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={app_id}&units=metric'
@@ -36,7 +36,7 @@ def get_weather(location='Киев'):
     elif conditions == 'light snow':
         conditions = 'легкий снег'
 
-    info = f'<b>В городе {city} сейчас {conditions}.</b>\n' \
+    info = f'<b>В городе {city_ru} сейчас {conditions}.</b>\n' \
            f'<u>Температура: {temper}℃</u>\n' \
            f'Минимальная температура: {temp_min}℃\n' \
            f'Максимальная температура: {temp_max}℃\n'

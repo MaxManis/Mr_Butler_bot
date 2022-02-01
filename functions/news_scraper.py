@@ -1,5 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
+from google_trans_new import google_translator
+
+translator = google_translator()
 
 
 def get_news(category='https://www.bbc.com/news/technology'):
@@ -17,7 +20,6 @@ def get_news(category='https://www.bbc.com/news/technology'):
 
     req = requests.get(url, headers=headers)
     src = req.text
-
     soup = BeautifulSoup(src, "lxml")
 
     news = soup.find('ol', class_='gs-u-m0 gs-u-p0 lx-stream__feed qa-stream')\
@@ -38,8 +40,8 @@ def get_news(category='https://www.bbc.com/news/technology'):
 
         all_news.append(
             {
-                'Title': new_title,
-                'Text': new_text,
+                'Title': translator.translate(str(new_title), lang_tgt='ru'),
+                'Text': translator.translate(str(new_text), lang_tgt='ru'),
                 'Link': 'https://www.bbc.com' + new_link
             }
         )

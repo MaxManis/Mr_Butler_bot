@@ -107,4 +107,7 @@ def score(dealer_hand, player_hand):
     elif total(player_hand) > total(dealer_hand):
         res = print_results(dealer_hand, player_hand) + "\nCongratulations. Your score is higher than the dealer. You win\n"
         return res
+    elif total(player_hand) == total(dealer_hand):
+        res = print_results(dealer_hand, player_hand) + "\nНичья! Вы не выйграли и не проиграли!\n"
+        return res
 

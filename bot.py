@@ -5,23 +5,28 @@ from aiogram.dispatcher.filters import Text
 from aiogram import Bot, types
 from aiogram.utils.markdown import hbold, hunderline, hcode, hlink
 
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
 
-import config
-import news_scraper
-import weather
-import chatbot_talk
-import exchange_rate
-import sqlite_db
-import text_recognition
-import blackjack
-import interesting_api
+import config_files.dicts as dicts
+import config_files.config as config
+from config_files.my_states import TryMySets, WriteToOper
+
+import functions.news_scraper as news_scraper
+import functions.weather as weather
+import functions.chatbot_talk as chatbot_talk
+import functions.exchange_rate as exchange_rate
+import functions.sqlite_db as sqlite_db
+import functions.text_recognition as text_recognition
+import functions.blackjack as blackjack
+import functions.interesting_api as interesting_api
+import functions.hotline as hotline
 
 import random
 
 bot = Bot(token=config.TOKEN)
-dp = Dispatcher(bot)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
 
 oper_id = config.oper_id
 secret = config.secret
@@ -31,7 +36,7 @@ secret = config.secret
 # bot.set_webhook(url="https://boston88.pythonanywhere.com/{}".format(secret))
 
 # main part of txt db for msg sending
-joined_file = open("db/joined.txt", "r")
+joined_file = open(config.db_path + "joined.txt", "r")
 joinedUsers = set()
 for line in joined_file:
     joinedUsers.add(line.strip())
@@ -48,13 +53,15 @@ async def start_command(message: types.Message):
         keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
         keyboard.add(*start_buttons)
         user_name = message.from_user.first_name
+        sti = open(config.sticker_path + 'AnimatedSticker5.tgs', 'rb')
+        await bot.send_sticker(message.chat.id, sti)
         await bot.send_message(message.from_user.id, f'Hello {user_name}!', reply_markup=keyboard)
 
     elif res is False:
         # TXT DataBase:
         # adding user id to txt db for msg sending
         if not str(message.chat.id) in joinedUsers:
-            joined_file = open("db/joined.txt", 'a')
+            joined_file = open(config.db_path + "joined.txt", 'a')
             joined_file.write(str(message.chat.id) + "\n")
             joinedUsers.add(message.chat.id)
         # Share contact
@@ -76,8 +83,75 @@ async def contact(message: types.Message):
         await start_command(message)
 
 
-@dp.message_handler(Text(equals="😁Daddy jokes"))
-async def get_weather(message: types.Message):
+@dp.message_handler(Text(equals="💸HotLine Search"), state=None)
+async def get_state_1(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Send me a product name')
+    await TryMySets.set_1.set()
+
+
+@dp.message_handler(state=TryMySets.set_1)
+async def get_state_2(message: types.Message, state: FSMContext):
+    if "@" in message.text:
+        await bot.send_message(message.from_user.id, 'Please write correct product name')
+        return
+    ans = message.text
+    res = hotline.get_products(ans)
+    i = 0
+    for p in range(1, 6):
+        all_info = res[i]
+        if all_info['item_info'] == 'None':
+            await bot.send_message(message.from_user.id, 'Некорректный запрос!\n'
+                                                         'Попробуйте еще раз!')
+            break
+        prod = f"{hbold(all_info['item_info'])}\n" \
+               f"{hlink(all_info['item_price'], all_info['item_pic'])}\n" \
+               f"{all_info['price_a_b']}\n" \
+               f"{all_info['item_specs']}\n" \
+               f"{hlink('READ MORE', all_info['item_url'])}"
+        await bot.send_message(message.from_user.id, prod, parse_mode=types.ParseMode.HTML)
+        i += 1
+    await state.update_data(answer_1=ans)
+    await state.finish()
+
+
+@dp.message_handler(Text(equals="Написать оператору бота"), state='*')
+async def write_to_oper_start(message: types.Message):
+    await bot.send_message(message.from_user.id, 'Написши свое сообщение оператору бота!')
+    await WriteToOper.write_1.set()
+
+
+@dp.message_handler(state=WriteToOper.write_1)
+async def write_to_oper(message: types.Message, state: FSMContext):
+    ans = message.text
+    await bot.send_message(message.from_user.id, 'Сообщение оператору доставлено!')
+    await bot.send_message(config.oper_id, f'Сообщение от пользователя {message.from_user.id}:\n' + ans)
+    await state.update_data(answer_1=ans)
+    await state.finish()
+
+
+@dp.message_handler(Text(equals="🪨Камень-ножницы-бумага"))
+async def stone_start(message: types.Message):
+    start_buttons = ["🪨Камень", "✂️Ножницы", "📄Бумага"]
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(*start_buttons)
+    await bot.send_message(message.from_user.id, 'Отлично, давай сыграем!\nДелай свой выбор!\nРаз...Два...Три...',
+                           reply_markup=keyboard)
+
+
+@dp.message_handler(Text(equals=["🪨Камень", "✂️Ножницы", "📄Бумага"]))
+async def stone_result(message: types.Message):
+    start_buttons = config.start_keys
+    keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add(*start_buttons)
+    ai = interesting_api.stone_paper()
+    await bot.send_message(message.from_user.id, ai)
+    player = message.text
+    res = interesting_api.stone_paper_fight(ai, player)
+    await bot.send_message(message.from_user.id, res, reply_markup=keyboard)
+
+
+@dp.message_handler(Text(equals="🥲Несмешные шутки"))
+async def get_joke(message: types.Message):
     await bot.send_message(message.from_user.id, interesting_api.daddy_jokes())
 
 
@@ -87,30 +161,27 @@ async def get_rick_morty(message: types.Message):
 
 
 @dp.message_handler(Text(equals="✒️Распознавание текста"))
-async def get_weather(message: types.Message):
+async def start_text_recognition(message: types.Message):
     await bot.send_message(message.from_user.id, 'Выберете, пожалуйста, изображение на вашем устройстве.\n'
                                                  'Затем отправьте его мне)')
 
 
 @dp.message_handler(content_types=['photo'])
 async def handle_docs_photo(message):
-    await bot.send_message(message.from_user.id, '🕓Please wait, Im reading your text!')
-    file_path = f'files/test-{message.chat.id}.jpg'
+    await bot.send_message(message.from_user.id, hcode('🕓Please wait, Im reading your text!'), parse_mode=types.ParseMode.HTML)
+    file_path = f'{config.text_rec_path}test-{message.chat.id}.jpg'
     await message.photo[-1].download(file_path)
     res = text_recognition.text_rec(file_path)
     start_buttons = config.start_keys
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(*start_buttons)
-    co = ''
-    for i in res:
-        co += f'\n{i}'
     await bot.send_message(message.from_user.id, '✒️Результат распознавания текста:')
-    await bot.send_message(message.from_user.id, co, reply_markup=keyboard)
+    await bot.send_message(message.from_user.id, res, reply_markup=keyboard)
 
 
 @dp.message_handler(Text(equals="🃏BlackJack"))
 async def start_blackjack(message: types.Message):
-    await bot.send_message(message.from_user.id, 'WELCOME TO BLACKJACK!')
+    await bot.send_message(message.from_user.id, 'ДОБРО ПОЖАЛОВАТЬ В BLACKJACK!')
     global dealer_hand, player_hand
     dealer_hand = blackjack.deal()
     player_hand = blackjack.deal()
@@ -156,18 +227,19 @@ async def get_weather(message: types.Message):
 @dp.message_handler(Text(equals=["🇺🇦Украина", "🇷🇺Россия", "🇪🇺Города Европы"]))
 async def choose_city(message: types.Message):
     if message.text == "🇺🇦Украина":
-        ilk = types.ReplyKeyboardMarkup(resize_keyboard=True).add(*config.ua_cities)
+        ilk = types.ReplyKeyboardMarkup(resize_keyboard=True).add(*dicts.ua_cities)
     elif message.text == "🇷🇺Россия":
-        ilk = types.ReplyKeyboardMarkup(resize_keyboard=True).add(*config.ru_cities)
+        ilk = types.ReplyKeyboardMarkup(resize_keyboard=True).add(*dicts.ru_cities)
     elif message.text == "🇪🇺Города Европы":
-        ilk = types.ReplyKeyboardMarkup(resize_keyboard=True).add(*config.eu_cities)
+        ilk = types.ReplyKeyboardMarkup(resize_keyboard=True).add(*dicts.eu_cities)
     await bot.send_message(message.from_user.id, 'Choose your city please!', reply_markup=ilk)
 
 
-@dp.message_handler(Text(equals=config.all_cities))
+@dp.message_handler(Text(equals=dicts.all_cities))
 async def show_res_weather(message: types.Message):
-    city = message.text
-    info = weather.get_weather(city)
+    city_ru = message.text
+    city_en = interesting_api.translate_ru_to_en(city_ru)
+    info = weather.get_weather(city_en, city_ru)
     start_buttons = config.start_keys
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(*start_buttons)
@@ -195,10 +267,10 @@ async def get_news(message: types.Message):
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(*start_buttons)
     i = 0
-    for p in range(1, 11):
+    for p in range(1, 6):
         new = all_news[i]
         i += 1
-        if new['Text'] == 'No text':
+        if new['Text'] == 'No text' or new['Text'] == 'Нет текста':
             continue
         news = f"{hbold(new['Title'])}\n" \
                f"{hunderline(new['Text'])}\n" \
