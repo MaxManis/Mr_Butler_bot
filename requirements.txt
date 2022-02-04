@@ -6,4 +6,8 @@ googletrans==3.0.0
 google-trans-new==1.1.9
 chatterbot==1.0.4
 easyocr==1.4.1
-requests-html=0.10.0
+requests-html==0.10.0
+SpeechRecognition==3.8.1
+PyAudio==0.2.11
+ffmpeg==1.4
+ffmpeg-python==0.2.0

@@ -3,7 +3,8 @@ import json
 import random
 from aiogram.utils.markdown import hbold, hunderline, hcode, hlink
 from google_trans_new import google_translator
-import config_files.config
+import config_files.config as config
+
 
 translator = google_translator()
 
@@ -65,7 +66,10 @@ def viktorina():
     print(data[0]['question'])
     print(data[0]['answer'])
     print(data)
-
+    ans = translate_en_to_ru(data[0]['answer'])
+    res = translate_en_to_ru(data[0]['question'])
+    print(res)
+    print(ans)
 
     # ex = {'success': True, 'deck_id': 'srcgbpkbvjsc', 'cards': [{'code': '0C', 'image': 'https://deckofcardsapi.com/static/img/0C.png',
     # 'images': {'svg': 'https://deckofcardsapi.com/static/img/0C.svg', 'png': 'https://deckofcardsapi.com/static/img/0C.png'},
@@ -85,7 +89,7 @@ def daddy_jokes():
 def post_track():
     url = 'https://api.parceltrack.ru/v1/trackings/get/SA145413132EE'
     response = requests.get(url, headers={'Accept': 'application/json',
-                                          'Api-Key': config_files.config.track_api,
+                                          'Api-Key': config.track_api,
                                           'X-Requested-With': 'XMLHttpRequest'
                                           })
     res_1 = json.loads(response.text)
@@ -103,11 +107,14 @@ def get_morty():
     status = response_char.json()['status']
     species = response_char.json()['species']
     image = response_char.json()['image']
-    res = f'<b>Name: {name}</b>\n' \
-          f'Status: {status}\n' \
-          f'Species: {species}\n' \
-          f'{hlink("Image", image)}'
+    res = f'<b>Имя: {name}</b>\n' \
+          f'Статус: {status}\n' \
+          f'Вид: {species}\n' \
+          f'{hlink("Img", image)}'
 
     return res
+
+
+
 
 

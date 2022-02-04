@@ -7,3 +7,8 @@ class TryMySets(StatesGroup):
 
 class WriteToOper(StatesGroup):
     write_1 = State()
+
+
+class TasksToDo(StatesGroup):
+    task_1 = State()
+    task_2 = State()
