@@ -12,3 +12,19 @@ class WriteToOper(StatesGroup):
 class TasksToDo(StatesGroup):
     task_1 = State()
     task_2 = State()
+
+
+class WriteToUser(StatesGroup):
+    write_1 = State()
+    write_2 = State()
+
+
+class GoogTextTS(StatesGroup):
+    write_1 = State()
+
+
+class SportEvents(StatesGroup):
+    sport_1 = State()
+    sport_2 = State()
+
+

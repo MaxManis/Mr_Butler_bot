@@ -11,3 +11,8 @@ SpeechRecognition==3.8.1
 PyAudio==0.2.11
 ffmpeg==1.4
 ffmpeg-python==0.2.0
+phantomjs==1.4.1
+selenium==4.1.0
+PyQt5==5.15.6
+gTTS==2.2.3
+PyQt5-stubs==5.15.2.0

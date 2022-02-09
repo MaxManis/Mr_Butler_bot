@@ -2,6 +2,32 @@ import sqlite3
 import config_files.config as config
 
 
+def txt_db_set():
+    # main part of txt db for msg sending
+    joined_file = open(config.db_path + "joined.txt", "r")
+    joined_users = set()
+    for line in joined_file:
+        joined_users.add(line.strip())
+    joined_file.close()
+    return joined_users
+
+
+def txt_db_add(joined_users, user_id):
+    if not str(user_id) in joined_users:
+        joined_file = open(config.db_path + "joined.txt", 'a')
+        joined_file.write(str(user_id) + "\n")
+        joined_file.close()
+        joined_users.add(user_id)
+        return True
+    else:
+        return False
+
+
+def open_sticker(sticker_id):
+    sti = open(config.sticker_path + f'AnimatedSticker{str(sticker_id)}.tgs', 'rb')
+    return sti
+
+
 def sql_check(user_id):
     # SQL lite DATABASE:
     # create db & table and connect

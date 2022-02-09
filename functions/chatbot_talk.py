@@ -4,13 +4,13 @@ import config_files.config as config
 
 
 def ai_talk(question):
-    chatbot = ChatBot('Mr. Butler',
+    chatbot = ChatBot(name='Mr. Butler',
                       database=f'{config.db_path}CB_talk.db',
                       logic_adapters=[
         {
             'import_path': 'chatterbot.logic.BestMatch',
             'threshold': 0.65,
-            'default_response': 'I\'d love to chat with you some more, but better use the buttons!',
+            'default_response': 'Я бы с удовольствием с тобой поболтал, но лучше воспользуйся кнопками!',
         }
     ])
 
@@ -44,7 +44,11 @@ def ai_talk(question):
     # Create a new trainer for the chatbot
     trainer = ChatterBotCorpusTrainer(chatbot)
     # Train the chatbot based on the english corpus
-    trainer.train("chatterbot.corpus.english.conversations")
+    x = 0
+    # while x < 100:
+    #     trainer.train("chatterbot.corpus.russian")
+    #     x += 1
+    trainer.train("chatterbot.corpus.russian")
     # Get a response to an input statement
     response = chatbot.get_response(question)
     return response

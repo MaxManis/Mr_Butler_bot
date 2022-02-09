@@ -1,22 +1,23 @@
 import requests
 import json
 import random
+import os
 from aiogram.utils.markdown import hbold, hunderline, hcode, hlink
 from google_trans_new import google_translator
 import config_files.config as config
-
-
-translator = google_translator()
+from gtts import gTTS
 
 
 def translate_ru_to_en(ru):
     input_ru = ru
+    translator = google_translator()
     res = translator.translate(str(input_ru), lang_tgt='en')
     return res
 
 
 def translate_en_to_ru(en):
     input_en = en
+    translator = google_translator()
     res = translator.translate(str(input_en), lang_tgt='ru')
     return res
 
@@ -82,6 +83,7 @@ def daddy_jokes():
     response = requests.get(url, headers={'Accept': 'application/json'})
     res_1 = json.loads(response.text)
     res_2 = res_1['joke']
+    translator = google_translator()
     res = translator.translate(str(res_2), lang_tgt='ru')
     return res
 
@@ -94,6 +96,61 @@ def post_track():
                                           })
     res_1 = json.loads(response.text)
     return res_1
+
+
+def just_do_txt_without_empty_lines_ha():
+    file = open(f'{config.lib_path}dial.txt', 'r', encoding='utf-8')
+    to = file.readlines()
+    te = []
+    for i in to:
+        if i != '\n':
+            te.append(i)
+    with open(f'{config.lib_path}dial2.txt', 'w', encoding='utf-8') as file:
+        for i in te:
+            file.write(i)
+    file.close()
+
+
+def just_do_txt_without_empty_lines_2_bid_file():
+    with open(f'{config.lib_path}dialogues.txt', 'r', encoding='utf-8') as file:
+        content = file.readlines()
+    data = []
+    p = 0
+    for i in content:
+        if p == 0 and i != '':
+            data.append(i.strip())
+            p += 1
+            continue
+        elif p == 1 and i != '':
+            data.append(i.strip())
+            p += 1
+            continue
+        elif p == 2 and i != '':
+            continue
+        elif p == 2 and i == '':
+            p = 0
+            continue
+    with open(f'{config.lib_path}dialogues2.txt', 'w', encoding='utf-8') as file:
+        for i in data:
+            file.write(i)
+    file.close()
+
+
+def google_text_to_speech(user_id):
+    file = open(f'{config.lib_path}dial2.txt', 'r', encoding='utf-8')
+    text = file.readlines()
+    n = random.randint(1, len(text))
+    ts = text[n]
+    te = ts[ts.find('-')+2:]
+    print(te)
+    tts = gTTS(text=te, lang='ru')
+    v_path = f'{config.voice_wav_abs_path}dial-{user_id}-gtts.mp3'
+    tts.save(v_path)
+    return v_path
+
+
+def del_file_by_path(path):
+    os.remove(path)
 
 
 def get_morty():
@@ -111,10 +168,17 @@ def get_morty():
           f'Статус: {status}\n' \
           f'Вид: {species}\n' \
           f'{hlink("Img", image)}'
-
     return res
 
 
-
+def time_api(city='Kiev'):
+    url = f'http://worldtimeapi.org/api/timezone/Europe/{city}'
+    response = requests.get(url)
+    src = response.json()
+    date = src['datetime']
+    time = src['datetime']
+    res = [date[:date.find('T')],
+           time[time.find('T')+1:time.find('.')]]
+    return res
 
 
